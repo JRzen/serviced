@@ -1206,6 +1206,7 @@ func (d *daemon) initDriver() datastore.Driver {
 	eDriver.AddMapping(addressassignment.MAPPING)
 	eDriver.AddMapping(serviceconfigfile.MAPPING)
 	eDriver.AddMapping(user.MAPPING)
+
 	err := eDriver.Initialize(10 * time.Second)
 	if err != nil {
 		log.WithError(err).Fatal("Unable to establish connection to Elastic database")

@@ -1,4 +1,7 @@
 {
+    "dynamicMappings": {
+        "extra": "value"
+    },
     "extraElement": {
         "extra": "value"
     },

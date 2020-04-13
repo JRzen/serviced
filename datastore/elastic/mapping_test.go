@@ -42,7 +42,7 @@ func (s *mt) TestJSON(c *C) {
 	err = json.Unmarshal(bytes, &mapping)
 	c.Assert(err, IsNil)
 
-	c.Assert(mapping.Name, Equals, "testentity")
+	//c.Assert(mapping.Name, Equals, "testentity")
 
 	c.Assert(len(mapping.Entries), Equals, 1)
 
@@ -52,7 +52,6 @@ func (s *mt) TestJSON(c *C) {
 	c.Assert(len(props), Equals, 2)
 	c.Assert(props["ID"], NotNil)
 	c.Assert(props["Name"], NotNil)
-
 }
 
 func (s *mt) TestBadJSON(c *C) {

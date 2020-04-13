@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	esVersion = "0.90.13"
+	esVersion = "7.6.2"
 )
 
 // ElasticTest for running tests that need elasticsearch. Type is to be used a a gocheck Suite. When writing a test,
@@ -103,10 +103,12 @@ func (et *ElasticTest) SetUpSuite(c *gocheck.C) {
 			c.Fatalf("error in SetUpSuite: %v", err)
 		}
 	}
+	//SetDiscSpaceThresholds(et.driver.elasticURL())
 	err := driver.Initialize(time.Second * et.InitTimeout)
 	if err != nil {
 		c.Fatalf("error in SetUpSuite: %v", err)
 	}
+	//SetMaxResultWindow(et.driver.elasticURL(), et.Index)
 	if !existingServer {
 		//give it some time if we started it
 		time.Sleep(time.Second * 1)
@@ -117,7 +119,7 @@ func (et *ElasticTest) SetUpSuite(c *gocheck.C) {
 //TearDownSuite Run once after all tests or benchmarks have finished running.
 func (et *ElasticTest) TearDownSuite(c *gocheck.C) {
 	log.Print("ElasticTest TearDownSuite called")
-
+	et.driver.deleteIndex()
 	et.stop()
 }
 
@@ -125,6 +127,7 @@ func (et *ElasticTest) SetUpTest(c *gocheck.C) {
 	log.Print("ElasticTest SetUpTest called")
 	err := et.driver.deleteIndex()
 	c.Assert(err, gocheck.IsNil)
+	SetDiscSpaceThresholds(et.driver.elasticURL())
 	err = et.driver.Initialize(time.Second * et.InitTimeout)
 	c.Assert(err, gocheck.IsNil)
 }
@@ -168,13 +171,11 @@ func newTestCluster(elasticDir string, port uint16) (*testCluster, error) {
 
 	command := []string{
 		elasticDir + "/bin/elasticsearch",
-		"-f",
-		fmt.Sprintf("-Des.http.port=%v", port),
+		"-E",
+		fmt.Sprintf("http.port=%v", port),
 	}
 
-	conf := fmt.Sprintf(`multicast.enabled: false
-discovery.zen.ping.multicast.ping.enabled: false
-cluster.name: %v`, rand.Int())
+	conf := fmt.Sprintf(`cluster.name: %v`, rand.Int())
 	err := ioutil.WriteFile(elasticDir+"/config/elasticsearch.yml", []byte(conf), 0644)
 	if err != nil {
 		return nil, err
@@ -223,7 +224,7 @@ func ensureElasticJar(runDir string) string {
 	if err != nil {
 		log.Fatal("Can't find java in path")
 	}
-	gz := fmt.Sprintf("elasticsearch-%s.tar.gz", esVersion)
+	gz := fmt.Sprintf("elasticsearch-%s-linux-x86_64.tar.gz", esVersion)
 	gzPath := fmt.Sprintf("/tmp/%s", gz)
 
 	path := fmt.Sprintf("%s/elasticsearch-%s", runDir, esVersion)
@@ -232,11 +233,12 @@ func ensureElasticJar(runDir string) string {
 
 	log.Printf("checking tar %s exists", gzPath)
 	if _, err = os.Stat(gzPath); err != nil {
-		url := fmt.Sprintf("https://download.elasticsearch.org/elasticsearch/elasticsearch/%s", gz)
+		url := fmt.Sprintf("https://artifacts.elastic.co/downloads/elasticsearch/%s", gz)
 		commands = append(commands, []string{"curl", "-O", url})
 		commands = append(commands, []string{"mv", gz, gzPath})
 	}
 	commands = append(commands, []string{"tar", "-xvzf", gzPath, "-C", runDir + "/."})
+	commands = append(commands, []string{"chmod", "+x", path + "/bin"})
 
 	for _, cmd := range commands {
 		log.Printf("exec: %v", cmd)

@@ -14,6 +14,10 @@
 package isvcs
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/control-center/serviced/commons"
 	"github.com/control-center/serviced/commons/docker"
@@ -23,11 +27,6 @@ import (
 	"github.com/control-center/serviced/utils"
 	dockerclient "github.com/fsouza/go-dockerclient"
 	metrics "github.com/rcrowley/go-metrics"
-
-	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -279,8 +278,8 @@ func (svc *IService) getResourcePath(p string) string {
 	if svc.root == "" {
 		svc.root = config.GetOptions().IsvcsPath
 	}
-
-	return filepath.Join(svc.root, svc.Name, p)
+	path := filepath.Join(svc.root, svc.Name, p)
+	return path
 }
 
 func (svc *IService) setExitedChannel(newChan <-chan int) {
@@ -389,6 +388,12 @@ func (svc *IService) create() (*docker.Container, error) {
 					return nil, err
 				}
 			}
+
+			if strings.Contains(hostpath, "isvcs/elasticsearch-serviced/data") {
+				log.Info("Set chown to es-serviced data directory")
+				os.Chown(hostpath, 1000, 1000)
+			}
+
 			cd.HostConfig.Binds = append(cd.HostConfig.Binds, fmt.Sprintf("%s:%s", hostpath, dest))
 			config.Volumes[dest] = struct{}{}
 		}
