@@ -38,7 +38,7 @@ def elastic_server(port):
         # TODO: Wait for start more betterly
         cmd = ["docker", "run", "-d", "--name", container_name,
                "-p", "%d:9200" % port, "zenoss/serviced-isvcs:v64-dev",
-               "su elastic -c '/opt/elasticsearch-7.6.2/bin/elasticsearch -E cluster.name=%s'" % container_name]
+               "su elastic -c '/opt/elasticsearch-7.7.1/bin/elasticsearch -E cluster.name=%s'" % container_name]
         subprocess.call(cmd)
         time.sleep(10)
         yield
