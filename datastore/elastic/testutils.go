@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	esVersion = "7.6.2"
+	esVersion = "7.7.1"
 )
 
 // ElasticTest for running tests that need elasticsearch. Type is to be used a a gocheck Suite. When writing a test,
